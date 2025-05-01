@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LuxeStays.Domain\LuxeStays.Domain.csproj" />
+    <ProjectReference Include="..\LuxeStays.Application\LuxeStays.Application.csproj" />
   </ItemGroup>
 
 </Project>

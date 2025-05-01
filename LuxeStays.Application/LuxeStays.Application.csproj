@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LuxeStays.Domain\LuxeStays.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
