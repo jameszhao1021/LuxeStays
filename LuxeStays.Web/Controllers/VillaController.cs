@@ -11,16 +11,22 @@ namespace LuxeStays.Web.Controllers
     {
         //private readonly ApplicationDbContext _db;
 
-        private readonly IVillaRepository _villaRepo;
+        //private readonly IVillaRepository _villaRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
         //public VillaController(ApplicationDbContext db)
         //{
         //    _db = db;
         //}
 
-        public VillaController(IVillaRepository villaRepo)
+        //public VillaController(IVillaRepository villaRepo)
+        //{
+        //    _villaRepo = villaRepo;
+        //}
+
+        public VillaController(IUnitOfWork UnitOfWork)
         {
-            _villaRepo = villaRepo;
+            _unitOfWork = UnitOfWork;
         }
 
         //public IActionResult Index()
@@ -31,7 +37,7 @@ namespace LuxeStays.Web.Controllers
 
         public IActionResult Index()
         {
-            var villas = _villaRepo.GetAll();
+            var villas = _unitOfWork.Villa.GetAll();
             return View(villas);
         }
 
@@ -50,9 +56,9 @@ namespace LuxeStays.Web.Controllers
             if (ModelState.IsValid)
             {
                 //_db.Villas.Add(villa);
-                _villaRepo.Add(villa);
+                _unitOfWork.Villa.Add(villa);
                 //_db.SaveChanges();
-                _villaRepo.Save();
+                _unitOfWork.Save();
                 TempData["success"] = "The villa has been created successfully.";
                 return RedirectToAction("Index");
             }
@@ -62,7 +68,7 @@ namespace LuxeStays.Web.Controllers
         public IActionResult Update(int villaId)
         {
             //Villa? updateVilla = _db.Villas.FirstOrDefault(villa=>villa.Id == villaId);
-            Villa? updateVilla = _villaRepo.Get(villa => villa.Id == villaId);
+            Villa? updateVilla = _unitOfWork.Villa.Get(villa => villa.Id == villaId);
 
             if (updateVilla == null)
             {
@@ -79,9 +85,9 @@ namespace LuxeStays.Web.Controllers
             if (ModelState.IsValid && villa.Id > 0)
             {
                 //_db.Villas.Update(villa);
-                _villaRepo.Update(villa);
+                _unitOfWork.Villa.Update(villa);
                 //_db.SaveChanges();
-                _villaRepo.Save();
+                _unitOfWork.Save();
                 TempData["success"] = "The villa has been updated successfully.";
                 return RedirectToAction("Index");
             }
@@ -90,7 +96,7 @@ namespace LuxeStays.Web.Controllers
 
         public IActionResult Delete(int villaId) {
             //Villa? deleteVilla = _db.Villas.FirstOrDefault(villa => villa.Id == villaId);
-            Villa? deleteVilla = _villaRepo.Get(villa => villa.Id == villaId);
+            Villa? deleteVilla = _unitOfWork.Villa.Get(villa => villa.Id == villaId);
 
             if (deleteVilla == null)
             {
@@ -105,15 +111,15 @@ namespace LuxeStays.Web.Controllers
         public IActionResult Delete(Villa villa)
         {
             //Villa? deleteVilla = _db.Villas.FirstOrDefault(item => item.Id == villa.Id);
-            Villa? deleteVilla = _villaRepo.Get(item => item.Id == villa.Id);
+            Villa? deleteVilla = _unitOfWork.Villa.Get(item => item.Id == villa.Id);
 
             if (deleteVilla !=null)
             {
                 //_db.Villas.Remove(deleteVilla);
-                _villaRepo.Remove(deleteVilla);
+                _unitOfWork.Villa.Remove(deleteVilla);
 
                 //_db.SaveChanges();
-                _villaRepo.Save();
+                _unitOfWork.Save();
                 TempData["success"] = "The villa has been deleted successfully.";
                 return RedirectToAction("Index");
             }

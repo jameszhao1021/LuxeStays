@@ -8,14 +8,9 @@ using System.Threading.Tasks;
 
 namespace LuxeStays.Application.Common.Interfaces
 {
-    public interface IVillaRepository
-    {
-        IEnumerable<Villa> GetAll(Expression<Func<Villa,bool>>?filter=null, string?includeProperties = null);
-        Villa Get(Expression<Func<Villa, bool>>filter, string? includeProperties = null);
-
-        void Add(Villa entity);
-        void Remove(Villa entity);
+    public interface IVillaRepository : IRepository<Villa>
+    {      
         void Update(Villa entity);
-        void Save();     
+        
     }
 }

@@ -1,30 +1,26 @@
 ﻿using LuxeStays.Application.Common.Interfaces;
-using LuxeStays.Domain.Entities;
 using LuxeStays.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace LuxeStays.Infrastructure.Repository
 {
-   
-    public class VillaRepository : Repository<Villa>, IVillaRepository
+    public class UnitOfWork : IUnitOfWork
     {
         private readonly ApplicationDbContext _db;
+        public IVillaRepository Villa { get; private set; }
 
-        public VillaRepository(ApplicationDbContext db) : base(db)
+        public UnitOfWork(ApplicationDbContext db)
         {
             _db = db;
+            Villa = new VillaRepository(_db);
         }
-
-        public void Update(Villa entity)
+        public void Save()
         {
-            _db.Villas.Update(entity);
+            _db.SaveChanges();
         }
-       
     }
 }
