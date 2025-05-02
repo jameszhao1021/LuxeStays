@@ -1,5 +1,7 @@
-﻿using LuxeStays.Domain.Entities;
+﻿using LuxeStays.Application.Common.Interfaces;
+using LuxeStays.Domain.Entities;
 using LuxeStays.Infrastructure.Data;
+using LuxeStays.Infrastructure.Repository;
 using LuxeStays.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -11,17 +13,23 @@ namespace LuxeStays.Web.Controllers
 {
     public class VillaNumberController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        //private readonly ApplicationDbContext _db;
 
-        public VillaNumberController(ApplicationDbContext db)
+        //public VillaNumberController(ApplicationDbContext db)
+        //{
+        //    _db = db;
+        //}
+
+        private readonly IUnitOfWork _unitOfWork;
+
+        public VillaNumberController(IUnitOfWork UnitOfWork)
         {
-            _db = db;
+            _unitOfWork = UnitOfWork;
         }
-
 
         public IActionResult Index()
         {
-            var villaNumbers = _db.VillaNumbers.Include(villaNumber=>villaNumber.Villa).ToList();
+            var villaNumbers = _unitOfWork.VillaNumber.GetAll(null,"Villa");
             return View(villaNumbers);
         }
 
@@ -30,7 +38,7 @@ namespace LuxeStays.Web.Controllers
 
             VillaNumberVM VillaNumberVM = new VillaNumberVM()
             {
-                VillaList = _db.Villas.ToList().Select(item => new SelectListItem
+                VillaList = _unitOfWork.Villa.GetAll().Select(item => new SelectListItem
                 {
                     Text = item.Name,
                     Value = item.Id.ToString()
@@ -49,23 +57,25 @@ namespace LuxeStays.Web.Controllers
         [HttpPost]
         public IActionResult Create(VillaNumberVM villaNumberVM)
         {
-           
-            bool roomNumberExist = _db.VillaNumbers.Any(u => u.Villa_Number == villaNumberVM.VillaNumber.Villa_Number);
 
-            if (ModelState.IsValid && !roomNumberExist)
+            //bool roomNumberExist = _db.VillaNumbers.Any(u => u.Villa_Number == villaNumberVM.VillaNumber.Villa_Number);
+            VillaNumber roomNumberExist = _unitOfWork.VillaNumber.Get(u => u.Villa_Number == villaNumberVM.VillaNumber.Villa_Number);
+
+
+            if (ModelState.IsValid && roomNumberExist == null)
             {
-                _db.VillaNumbers.Add(villaNumberVM.VillaNumber);
-                _db.SaveChanges();
+                _unitOfWork.VillaNumber.Add(villaNumberVM.VillaNumber);
+                _unitOfWork.Save();
                 TempData["success"] = "The villa number has been created successfully.";
                 return RedirectToAction("Index");
             }
 
-            if (roomNumberExist)
+            if (roomNumberExist != null)
             {
                 TempData["error"] = "The number has already existed.";
             }
 
-            villaNumberVM.VillaList = _db.Villas.ToList().Select(item => new SelectListItem
+            villaNumberVM.VillaList = _unitOfWork.Villa.GetAll().Select(item => new SelectListItem
             {
                 Text = item.Name,
                 Value = item.Id.ToString()
@@ -79,12 +89,12 @@ namespace LuxeStays.Web.Controllers
 
             VillaNumberVM villaNumberVM = new VillaNumberVM()
             {
-                VillaList = _db.Villas.ToList().Select(item => new SelectListItem
+                VillaList = _unitOfWork.Villa.GetAll().Select(item => new SelectListItem
                 {
                     Text = item.Name,
                     Value = item.Id.ToString()
                 }),
-                VillaNumber = _db.VillaNumbers.FirstOrDefault(villaNumber => villaNumber.Villa_Number == villaNumberId)
+                VillaNumber = _unitOfWork.VillaNumber.Get(villaNumber => villaNumber.Villa_Number == villaNumberId)
 
             };
             if (villaNumberVM.VillaNumber == null)
@@ -116,12 +126,12 @@ namespace LuxeStays.Web.Controllers
 
             if (ModelState.IsValid)
             {
-                _db.VillaNumbers.Update(villaNumberVM.VillaNumber);
-                _db.SaveChanges();
+                _unitOfWork.VillaNumber.Update(villaNumberVM.VillaNumber);
+                _unitOfWork.Save();
                 TempData["success"] = "The villa number has been updated successfully.";
                 return RedirectToAction("Index");
             }
-            villaNumberVM.VillaList = _db.Villas.ToList().Select(item => new SelectListItem
+            villaNumberVM.VillaList = _unitOfWork.Villa.GetAll().Select(item => new SelectListItem
             {
                 Text = item.Name,
                 Value = item.Id.ToString()
@@ -134,12 +144,12 @@ namespace LuxeStays.Web.Controllers
         {
             VillaNumberVM villaNumberVM = new VillaNumberVM()
             {
-                VillaList = _db.Villas.ToList().Select(item => new SelectListItem
+                VillaList = _unitOfWork.Villa.GetAll().Select(item => new SelectListItem
                 {
                     Text = item.Name,
                     Value = item.Id.ToString()
                 }),
-                VillaNumber = _db.VillaNumbers.FirstOrDefault(villaNumber => villaNumber.Villa_Number == villaNumberId)
+                VillaNumber = _unitOfWork.VillaNumber.Get(villaNumber => villaNumber.Villa_Number == villaNumberId)
             };
             //VillaNumber? deleteVillaNumber = _db.VillaNumbers.FirstOrDefault(villaNumber => villaNumber.Villa_Number == villaNumberId);
             if (villaNumberVM.VillaNumber == null)
@@ -156,12 +166,12 @@ namespace LuxeStays.Web.Controllers
         {
            
 
-            VillaNumber? deleteVillaNumber = _db.VillaNumbers.FirstOrDefault(villaNumber => villaNumber.Villa_Number == villaNumberVM.VillaNumber.Villa_Number);
+            VillaNumber? deleteVillaNumber = _unitOfWork.VillaNumber.Get(villaNumber => villaNumber.Villa_Number == villaNumberVM.VillaNumber.Villa_Number);
 
             if (deleteVillaNumber != null)
             {
-                _db.VillaNumbers.Remove(deleteVillaNumber);
-                _db.SaveChanges();
+                _unitOfWork.VillaNumber.Remove(deleteVillaNumber);
+                _unitOfWork.Save();
                 TempData["success"] = "The villa Number has been deleted successfully.";
                 return RedirectToAction("Index");
             }
