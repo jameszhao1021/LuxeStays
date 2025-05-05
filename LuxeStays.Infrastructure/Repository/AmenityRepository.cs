@@ -9,17 +9,17 @@ using System.Threading.Tasks;
 
 namespace LuxeStays.Infrastructure.Repository
 {
-    public class VillaNumberRepository: Repository<VillaNumber>,IVillaNumberRepository
+    public class AmenityRepository: Repository<Amenity>,IAmenityRepository
     {
         private readonly ApplicationDbContext _db;
-        public VillaNumberRepository(ApplicationDbContext db) : base(db)
+        public AmenityRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
         }
 
-        public void Update(VillaNumber entity)
+        public void Update(Amenity entity)
         {
-            _db.VillaNumbers.Update(entity);
+            _db.Amentities.Update(entity);
         }
     }
 }

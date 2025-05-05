@@ -3,6 +3,7 @@ using LuxeStays.Domain.Entities;
 using LuxeStays.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Runtime.InteropServices;
 
 namespace LuxeStays.Web.Controllers
@@ -13,6 +14,7 @@ namespace LuxeStays.Web.Controllers
 
         //private readonly IVillaRepository _villaRepo;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         //public VillaController(ApplicationDbContext db)
         //{
@@ -24,9 +26,10 @@ namespace LuxeStays.Web.Controllers
         //    _villaRepo = villaRepo;
         //}
 
-        public VillaController(IUnitOfWork UnitOfWork)
+        public VillaController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
-            _unitOfWork = UnitOfWork;
+            _unitOfWork = unitOfWork;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         //public IActionResult Index()
@@ -55,8 +58,23 @@ namespace LuxeStays.Web.Controllers
             }
             if (ModelState.IsValid)
             {
-                //_db.Villas.Add(villa);
-                _unitOfWork.Villa.Add(villa);
+                if(villa.Image != null )
+                {
+                    string fileName = Guid.NewGuid().ToString()+ Path.GetExtension(villa.Image.FileName);
+                    string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, @"images\VillaImage");
+
+                    using (var fileStream = new FileStream(Path.Combine(imagePath, fileName), FileMode.Create))
+                    {
+                        villa.Image.CopyTo(fileStream);
+                    }
+                    villa.ImageUrl = @"\images\VillaImage\" + fileName;
+                }
+                else
+                {
+                    villa.ImageUrl = "https://placehold.co/600x400";
+                }
+                    //_db.Villas.Add(villa);
+                    _unitOfWork.Villa.Add(villa);
                 //_db.SaveChanges();
                 _unitOfWork.Save();
                 TempData["success"] = "The villa has been created successfully.";
@@ -84,7 +102,28 @@ namespace LuxeStays.Web.Controllers
 
             if (ModelState.IsValid && villa.Id > 0)
             {
-                //_db.Villas.Update(villa);
+
+                if (villa.Image != null)
+                {
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(villa.Image.FileName);
+                    string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, @"images\VillaImage");
+
+                    if (!string.IsNullOrEmpty(villa.ImageUrl))
+                    {
+                        var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, villa.ImageUrl.TrimStart('\\'));
+                        if (System.IO.File.Exists(oldImagePath)) {
+                            System.IO.File.Delete(oldImagePath);
+                        }
+                    }
+
+
+                    using (var fileStream = new FileStream(Path.Combine(imagePath, fileName), FileMode.Create))
+                    {
+                        villa.Image.CopyTo(fileStream);
+                    }
+                    villa.ImageUrl = @"\images\VillaImage\" + fileName;
+                }
+              
                 _unitOfWork.Villa.Update(villa);
                 //_db.SaveChanges();
                 _unitOfWork.Save();
@@ -115,6 +154,15 @@ namespace LuxeStays.Web.Controllers
 
             if (deleteVilla !=null)
             {
+                if (!string.IsNullOrEmpty(deleteVilla.ImageUrl))
+                {
+                    var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, deleteVilla.ImageUrl.TrimStart('\\'));
+                    if (System.IO.File.Exists(oldImagePath))
+                    {
+                        System.IO.File.Delete(oldImagePath);
+                    }
+                }
+
                 //_db.Villas.Remove(deleteVilla);
                 _unitOfWork.Villa.Remove(deleteVilla);
 

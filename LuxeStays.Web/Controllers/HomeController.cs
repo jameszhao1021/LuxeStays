@@ -1,21 +1,29 @@
 using System.Diagnostics;
+using LuxeStays.Application.Common.Interfaces;
 using LuxeStays.Web.Models;
+using LuxeStays.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LuxeStays.Web.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IUnitOfWork unitOfWork)
         {
-            _logger = logger;
+            _unitOfWork = unitOfWork;
         }
 
         public IActionResult Index()
         {
-            return View();
+            HomeVM homeVM = new HomeVM()
+            {
+                VillaList = _unitOfWork.Villa.GetAll(includeProperties: "VillaAmenity"),
+                Nights = 1,
+                CheckInDate = DateOnly.FromDateTime(DateTime.Now)
+            };
+            return View(homeVM);
         }
 
         public IActionResult Privacy()

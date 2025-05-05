@@ -29,7 +29,7 @@ namespace LuxeStays.Web.Controllers
 
         public IActionResult Index()
         {
-            var villaNumbers = _unitOfWork.VillaNumber.GetAll(null,"Villa");
+            var villaNumbers = _unitOfWork.VillaNumber.GetAll(includeProperties:"Villa");
             return View(villaNumbers);
         }
 
@@ -59,10 +59,10 @@ namespace LuxeStays.Web.Controllers
         {
 
             //bool roomNumberExist = _db.VillaNumbers.Any(u => u.Villa_Number == villaNumberVM.VillaNumber.Villa_Number);
-            VillaNumber roomNumberExist = _unitOfWork.VillaNumber.Get(u => u.Villa_Number == villaNumberVM.VillaNumber.Villa_Number);
+            bool roomNumberExist = _unitOfWork.VillaNumber.Any(u => u.Villa_Number == villaNumberVM.VillaNumber.Villa_Number);
 
 
-            if (ModelState.IsValid && roomNumberExist == null)
+            if (ModelState.IsValid && !roomNumberExist)
             {
                 _unitOfWork.VillaNumber.Add(villaNumberVM.VillaNumber);
                 _unitOfWork.Save();
@@ -70,7 +70,7 @@ namespace LuxeStays.Web.Controllers
                 return RedirectToAction("Index");
             }
 
-            if (roomNumberExist != null)
+            if (roomNumberExist)
             {
                 TempData["error"] = "The number has already existed.";
             }
