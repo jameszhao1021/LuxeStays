@@ -1,6 +1,8 @@
 ﻿using LuxeStays.Application.Common.Interfaces;
+using LuxeStays.Application.Common.Utility;
 using LuxeStays.Domain.Entities;
 using LuxeStays.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -8,6 +10,7 @@ using System.Runtime.InteropServices;
 
 namespace LuxeStays.Web.Controllers
 {
+    [Authorize(Roles = SD.Role_Admin)]
     public class VillaController : Controller
     {
         //private readonly ApplicationDbContext _db;

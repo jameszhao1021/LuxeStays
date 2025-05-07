@@ -3,6 +3,8 @@ using LuxeStays.Infrastructure.Data;
 using LuxeStays.Infrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
 using LuxeStays.Application.Common.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using LuxeStays.Domain.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,9 +13,20 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(option=>
 option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 var app = builder.Build();
 
+//builder.Services.ConfigureApplicationCookie(option =>
+//{
+//    option.AccessDeniedPath = "/Account/AccessDenied";
+//    option.LoginPath = "/Account/Login";
+//});
+
+//builder.Services.Configure<IdentityOptions>(Option =>
+//{
+//    Option.Password.RequiredLength = 6;
+//});
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
