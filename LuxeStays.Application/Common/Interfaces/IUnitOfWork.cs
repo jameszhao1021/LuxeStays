@@ -11,6 +11,8 @@ namespace LuxeStays.Application.Common.Interfaces
         IVillaRepository Villa { get; }
         IVillaNumberRepository VillaNumber { get; }
         IAmenityRepository Amenity { get; }
+        IBookingRepository Booking { get; }
+        IApplicationUserRepository User { get; }
         void Save();
     }
 }

@@ -28,20 +28,10 @@ namespace LuxeStays.Web.Controllers
             return View(homeVM);
         }
 
-        [HttpPost]
-        public IActionResult Index(HomeVM homeVM)
-        {
 
-            homeVM.VillaList = _unitOfWork.Villa.GetAll(includeProperties: "VillaAmenity");
-            foreach (var villa in homeVM.VillaList) {
-                if (villa.Id % 2 == 0)
-                {
-                    villa.IsAvailable = false;
-                }
-            }
-              
-            return View(homeVM);
-        }
+    
+
+        [HttpPost]
 
         public IActionResult GetVillasByDate(int nights, DateOnly checkInDate)
         {
