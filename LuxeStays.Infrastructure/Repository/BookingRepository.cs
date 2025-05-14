@@ -1,4 +1,5 @@
 ﻿using LuxeStays.Application.Common.Interfaces;
+using LuxeStays.Application.Common.Utility;
 using LuxeStays.Domain.Entities;
 using LuxeStays.Infrastructure.Data;
 using System;
@@ -20,6 +21,42 @@ namespace LuxeStays.Infrastructure.Repository
         public void Update(Booking entity)
         {
             _db.Bookings.Update(entity);
+        }
+
+        public void UpdateStatus(int bookingId, string bookingStatus)
+        {
+            var booking = _db.Bookings.FirstOrDefault(booking => booking.Id == bookingId);
+            
+            if (booking!= null)
+            {
+                booking.Status = bookingStatus;
+                if(bookingStatus == SD.StatusCheckedIn)
+                {
+                    booking.ActualCheckInDate = DateTime.Now;
+                }
+                if (bookingStatus == SD.StatusCompleted)
+                {
+                    booking.ActualCheckOutDate = DateTime.Now;
+                }
+            }
+        }
+
+        public void UpdateStripePaymentId(int bookingId, string sessionId, string paymentIntentId)
+        {
+            var booking = _db.Bookings.FirstOrDefault(booking => booking.Id == bookingId);
+            if (booking != null)
+            {
+                if (!string.IsNullOrEmpty(sessionId))
+                {
+                    booking.StripeSessionId = sessionId;
+                }
+                if (!string.IsNullOrEmpty(paymentIntentId))
+                {
+                    booking.StripePaymentIntentId = paymentIntentId;
+                    booking.PaymentDate = DateTime.Now;
+                    booking.IsPaymentSuccessful = true; 
+                }
+            }
         }
     }
 }

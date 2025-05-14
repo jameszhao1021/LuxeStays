@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity;
 using LuxeStays.Application.Common.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Stripe.Checkout;
+using Stripe;
 namespace LuxeStays.Web.Controllers
 {
     
@@ -47,11 +49,55 @@ namespace LuxeStays.Web.Controllers
             booking.BookingDate = DateTime.Now;
             _unitOfWork.Booking.Add(booking);
             _unitOfWork.Save();
-            return RedirectToAction(nameof(BookingConfirmation), new {bookingId = booking.Id});
+
+            var domain = Request.Scheme + "://" + Request.Host.Value + "/";
+            var options = new SessionCreateOptions
+            {
+                LineItems = new List<SessionLineItemOptions>(),
+                Mode = "payment",
+                SuccessUrl = domain + $"booking/BookingConfirmation?bookingId={booking.Id}",
+                CancelUrl = domain + $"booking/FinaliseBooking?villaId={booking.VillaId}&checkIndate={booking.CheckInDate}&nights={booking.Nights}",
+            };
+            options.LineItems.Add(new SessionLineItemOptions
+            {
+                PriceData = new SessionLineItemPriceDataOptions
+                {
+                    UnitAmount = (long)(booking.TotalCost * 100),
+                    Currency = "aud",
+                    ProductData = new SessionLineItemPriceDataProductDataOptions
+                    {
+                        Name = villa.Name,
+                        //Images = new List<string> { domain + villa.ImageUrl }
+                    },
+                },
+                Quantity  = 1,
+            });
+                                       
+            var service = new SessionService();
+            Session session = service.Create(options);
+            
+            _unitOfWork.Booking.UpdateStripePaymentId(booking.Id,session.Id, session.PaymentIntentId);
+            _unitOfWork.Save();
+
+            Response.Headers.Add("Location", session.Url);
+            return new StatusCodeResult(303);
+            //return RedirectToAction(nameof(BookingConfirmation), new {bookingId = booking.Id});
         }
 
         public IActionResult BookingConfirmation(int bookingId)
         {
+            Booking booking = _unitOfWork.Booking.Get(booking=>booking.Id == bookingId, includeProperties:"User,villa");
+            if(booking.Status == SD.StatusPending)
+            {
+                var service = new SessionService();
+                Session session = service.Get(booking.StripeSessionId);
+                if(session.PaymentStatus == "paid")
+                {
+                    _unitOfWork.Booking.UpdateStatus(booking.Id, SD.StatusApproved);
+                    _unitOfWork.Booking.UpdateStripePaymentId(booking.Id, session.Id, session.PaymentIntentId);
+                    _unitOfWork.Save();
+                }
+            }
             return View(bookingId);
         }
     }
