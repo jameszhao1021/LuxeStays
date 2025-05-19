@@ -23,7 +23,7 @@ namespace LuxeStays.Infrastructure.Repository
             _db.Bookings.Update(entity);
         }
 
-        public void UpdateStatus(int bookingId, string bookingStatus)
+        public void UpdateStatus(int bookingId, string bookingStatus, int villaNumber = 0)
         {
             var booking = _db.Bookings.FirstOrDefault(booking => booking.Id == bookingId);
             
@@ -32,6 +32,7 @@ namespace LuxeStays.Infrastructure.Repository
                 booking.Status = bookingStatus;
                 if(bookingStatus == SD.StatusCheckedIn)
                 {
+                    booking.VillaNumber = villaNumber;
                     booking.ActualCheckInDate = DateTime.Now;
                 }
                 if (bookingStatus == SD.StatusCompleted)

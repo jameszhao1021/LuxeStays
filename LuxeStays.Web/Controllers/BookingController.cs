@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Stripe.Checkout;
 using Stripe;
+using System.Security.Claims;
+using System.Linq;
+
 namespace LuxeStays.Web.Controllers
 {
     
@@ -20,6 +23,14 @@ namespace LuxeStays.Web.Controllers
             _unitOfWork = unitOfWork;
             _userManager = userManager;
         }
+        [Authorize]
+        public IActionResult Index()
+        {
+            var bookings = _unitOfWork.Booking.GetAll(includeProperties: "User,villa");
+            return View(bookings);
+        }
+
+
         [Authorize]
         public async Task<IActionResult> FinaliseBooking(int villaId, DateOnly checkInDate, int nights) {
             var user = await _userManager.GetUserAsync(User);
@@ -93,12 +104,67 @@ namespace LuxeStays.Web.Controllers
                 Session session = service.Get(booking.StripeSessionId);
                 if(session.PaymentStatus == "paid")
                 {
-                    _unitOfWork.Booking.UpdateStatus(booking.Id, SD.StatusApproved);
+                    _unitOfWork.Booking.UpdateStatus(booking.Id, SD.StatusApproved,0);
                     _unitOfWork.Booking.UpdateStripePaymentId(booking.Id, session.Id, session.PaymentIntentId);
                     _unitOfWork.Save();
                 }
             }
             return View(bookingId);
         }
+
+        [Authorize]
+        public IActionResult BookingDetails(int bookingId) {
+            var booking = _unitOfWork.Booking.Get(booking => booking.Id == bookingId, includeProperties: "User,villa");
+            if (booking.VillaNumber == 0 && booking.Status == SD.StatusApproved) {
+                var availableVillaNumbers = AssignAvailableVillaNumberByVilla(booking.VillaId);
+                booking.VillaNumbers = _unitOfWork.VillaNumber.GetAll(villaNumber => villaNumber.VillaId == booking.VillaId &&
+                availableVillaNumbers.Contains(villaNumber.Villa_Number)).ToList();
+            }
+            return View(booking);
+        }
+
+        private  List<int>  AssignAvailableVillaNumberByVilla(int villaId) {
+            List<int> availableVillaNumbers = new();
+            var villaNumbers = _unitOfWork.VillaNumber.GetAll(villaNumber=>villaNumber.VillaId == villaId);
+            var checkedInVilla = _unitOfWork.Booking.GetAll(booking => booking.VillaId == villaId && booking.Status == SD.StatusCheckedIn).Select(booking=>booking.VillaNumber);
+            foreach (var villaNumber in villaNumbers)
+            {
+                if (!checkedInVilla.Contains(villaNumber.Villa_Number)){
+                    availableVillaNumbers.Add(villaNumber.Villa_Number);
+                }
+            }
+            return availableVillaNumbers;
+        }
+
+        [HttpPost]
+        [Authorize(Roles = SD.Role_Admin)]
+        public IActionResult CheckIn(Booking booking)
+        {
+
+        }
+
+        #region API Calls
+        [HttpGet]
+        [Authorize]
+        public IActionResult GetAll(string status)
+        {
+            IEnumerable<Booking> objBookings;
+            if (User.IsInRole(SD.Role_Admin))
+            {
+                objBookings = _unitOfWork.Booking.GetAll(includeProperties:"User,villa");
+            }
+            else
+            {
+                var claimsIdentity = (ClaimsIdentity)User.Identity;
+                var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+                objBookings = _unitOfWork.Booking.GetAll(booking => booking.UserId == userId, includeProperties: "User,villa");
+            }
+            if (!string.IsNullOrEmpty(status)) {
+                objBookings = objBookings.Where(obj => obj.Status.ToLower() == status.ToLower());
+            }
+            return Json(new {data= objBookings});   
+        }
+
+        #endregion
     }
 }
