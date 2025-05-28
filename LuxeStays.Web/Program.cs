@@ -15,6 +15,7 @@ string stripePublishableKey = Environment.GetEnvironmentVariable("STRIPE_PUBLISH
 builder.Configuration["Stripe:SecretKey"] = stripeSecretKey;
 builder.Configuration["Stripe:PublishableKey"] = stripePublishableKey;
 // Add services to the container.
+builder.Services.AddHttpClient();
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(option=>
 option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))

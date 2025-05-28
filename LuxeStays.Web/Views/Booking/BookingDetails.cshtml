@@ -26,6 +26,13 @@
         </div>
         <div class="col-12 col-lg-6 p-4 2 mt-4 mt-md-0" style="border-left:1px solid #aaa">
             <form method="post">
+                <input asp-for="Id" hidden />
+                <input asp-for="VillaId" hidden />
+                <input asp-for="UserId" hidden />
+                <input asp-for="CheckInDate" hidden />
+                <input asp-for="CheckOutDate" hidden />
+                <input asp-for="Nights" hidden />
+                <input asp-for="VillaNumber" hidden />
 
                 <div class="row pt-1 mb-3 " style="border-radius:20px; ">
                     <div class="col-6">
@@ -34,7 +41,7 @@
                     <div class="col-6">
                         @if ((Model.Status == SD.StatusApproved || Model.Status == SD.StatusPending ) && User.IsInRole(SD.Role_Admin))
                         {
-                            <button type="submit" class="btn btn-sm btn-outline-danger form-control my-1"><i class="bi bi-x-circle"></i> &nbsp; Cancel Booking</button>
+                            <button asp-controller="Booking" asp-action="CancelBooking"  type="submit" class="btn btn-sm btn-outline-danger form-control my-1"><i class="bi bi-x-circle"></i> &nbsp; Cancel Booking</button>
 
                         }
                     </div>
@@ -81,9 +88,9 @@
                         <label class="text-warning" asp-for="@Model.ActualCheckOutDate">Actual Check-out Date</label>
                         <input disabled class="form-control" asp-for="@Model.ActualCheckOutDate" />
                     </div>
-                   
-                        @if(Model.Status == SD.StatusApproved && User.IsInRole(SD.Role_Admin))
-                        {
+
+                    @if(Model.Status == SD.StatusApproved && User.IsInRole(SD.Role_Admin))
+                    {
                         <div class="form-group pt-2 col-6">
                             <label class="text-danger" asp-for="@Model.VillaNumber"></label>
                             <select class="form-select" asp-for="VillaNumber">
@@ -93,8 +100,20 @@
                                 }
                             </select>
                         </div>
+                    }
+                    else
+                    {
+                        <input asp-for="VillaNumber" hidden />
+                        @if (Model.Status == SD.StatusCheckedIn || Model.Status == SD.StatusCompleted)
+                        {
+                            <div class="form-group pt-2 col-6">
+                                <label class="text-warning" asp-for="@Model.VillaNumber">Villa Number</label>
+                                <input disabled class="form-control" asp-for="@Model.VillaNumber" />
+                            </div>
                         }
-                 
+                      
+                    }
+
                     @if (Model.IsPaymentSuccessful && User.IsInRole(SD.Role_Admin))
                     {
                         <div class="form-group pt-2 col-6">
@@ -111,7 +130,10 @@
                         </div>
 
                     }
-
+                    <div class="form-group pt-2 col-6">
+                        <label class="text-warning" asp-for="@Model.Status">Status</label>
+                        <input disabled class="form-control" asp-for="@Model.Status" />
+                    </div>
 
                 </div>
                 <div class="form-group pt-2 pt-md-4">
@@ -119,11 +141,11 @@
                     {
                         @if (Model.Status == SD.StatusApproved)
                         {
-                            <button type="submit" class="btn btn-warning form-control my-1"><i class="bi bi-check2-square"></i> &nbsp; Check In</button>
+                            <button asp-controller="Booking" asp-action="CheckIn" type="submit" class="btn btn-warning form-control my-1"><i class="bi bi-check2-square"></i> &nbsp; Check In</button>
                         }
                         @if (Model.Status == SD.StatusCheckedIn)
                         {
-                            <button type="submit" class="btn btn-success form-control my-1"><i class="bi bi-clipboard2-check"></i> &nbsp; Check Out / Complete Booking</button>
+                            <button asp-controller="Booking" asp-action="CheckOut" type="submit" class="btn btn-success form-control my-1"><i class="bi bi-clipboard2-check"></i> &nbsp; Check Out / Complete Booking</button>
                         }
                     }
                    

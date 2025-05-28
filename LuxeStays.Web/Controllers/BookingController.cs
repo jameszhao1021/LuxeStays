@@ -10,6 +10,7 @@ using Stripe.Checkout;
 using Stripe;
 using System.Security.Claims;
 using System.Linq;
+using LuxeStays.Web.ViewModels;
 
 namespace LuxeStays.Web.Controllers
 {
@@ -18,10 +19,12 @@ namespace LuxeStays.Web.Controllers
     {     
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
-        public BookingController (IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
+        private readonly IHttpClientFactory _httpClientFactory;
+        public BookingController (IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, IHttpClientFactory httpClientFactory)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _httpClientFactory = httpClientFactory;
         }
         [Authorize]
         public IActionResult Index()
@@ -52,14 +55,30 @@ namespace LuxeStays.Web.Controllers
 
         [Authorize]
         [HttpPost]
-        public IActionResult FinaliseBooking(Booking booking)
+        public async Task<IActionResult> FinaliseBooking(Booking booking)
         {
             var villa =  _unitOfWork.Villa.Get(villa => villa.Id == booking.VillaId);
             booking.TotalCost = booking.Nights * villa.Price;
             booking.Status = SD.StatusPending;
             booking.BookingDate = DateTime.Now;
+
+            var villaNumberList = _unitOfWork.VillaNumber.GetAll().ToList();
+            var bookedVillas = _unitOfWork.Booking.GetAll(booking => booking.Status == SD.StatusApproved || booking.Status == SD.StatusCheckedIn).ToList();
+
+          
+            int roomAvailable = SD.VillaRomsAvailable_Count(villa.Id, villaNumberList, booking.CheckInDate, booking.Nights, bookedVillas);
+            villa.IsAvailable = roomAvailable > 0 ? true : false;
+            
+            if(roomAvailable == 0)
+            {
+                TempData["error"] = "Room has been sold out!";
+                return RedirectToAction(nameof(FinaliseBooking), new { villaId = booking.VillaId, checkInDate = booking.CheckInDate, nights = booking.Nights });
+            };
+
             _unitOfWork.Booking.Add(booking);
             _unitOfWork.Save();
+
+           
 
             var domain = Request.Scheme + "://" + Request.Host.Value + "/";
             var options = new SessionCreateOptions
@@ -91,14 +110,19 @@ namespace LuxeStays.Web.Controllers
             _unitOfWork.Save();
 
             Response.Headers.Add("Location", session.Url);
+
+           
+
             return new StatusCodeResult(303);
+
             //return RedirectToAction(nameof(BookingConfirmation), new {bookingId = booking.Id});
         }
 
-        public IActionResult BookingConfirmation(int bookingId)
+        public async Task<IActionResult> BookingConfirmation(int bookingId)
         {
             Booking booking = _unitOfWork.Booking.Get(booking=>booking.Id == bookingId, includeProperties:"User,villa");
-            if(booking.Status == SD.StatusPending)
+            var villa = _unitOfWork.Villa.Get(villa => villa.Id == booking.VillaId);
+            if (booking.Status == SD.StatusPending)
             {
                 var service = new SessionService();
                 Session session = service.Get(booking.StripeSessionId);
@@ -107,6 +131,39 @@ namespace LuxeStays.Web.Controllers
                     _unitOfWork.Booking.UpdateStatus(booking.Id, SD.StatusApproved,0);
                     _unitOfWork.Booking.UpdateStripePaymentId(booking.Id, session.Id, session.PaymentIntentId);
                     _unitOfWork.Save();
+                    try
+                    {
+                        var client = _httpClientFactory.CreateClient();
+                        var payload = new
+                        {
+                            BookingId = booking.Id,
+                            Company = booking.Name,
+                            Name = booking.Name,
+                            booking.Email,
+                            booking.Phone,
+                            booking.CheckInDate,
+                            booking.CheckOutDate,
+                            booking.Nights,
+                            booking.TotalCost,
+                            Origin = "LuxeStays",
+                            VillaName = villa.Name,
+                            VillaPrice = villa.Price
+                        };
+
+                        var json = System.Text.Json.JsonSerializer.Serialize(payload);
+                        var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+                        var webhookUrl = "https://ampeddigital.app.n8n.cloud/webhook-test/f335efe7-914e-4ea9-a5d3-388f2ae239ea";
+                        var webhookUrlProduction = "https://ampeddigital.app.n8n.cloud/webhook/f335efe7-914e-4ea9-a5d3-388f2ae239ea";
+
+                        var response = await client.PostAsync(webhookUrl, content);
+
+                        response.EnsureSuccessStatusCode(); // Optional: throw if n8n fails
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
                 }
             }
             return View(bookingId);
@@ -123,6 +180,33 @@ namespace LuxeStays.Web.Controllers
             return View(booking);
         }
 
+        [HttpPost]
+        [Authorize(Roles = SD.Role_Admin)]
+        public IActionResult CheckIn(Booking booking)
+        {
+            _unitOfWork.Booking.UpdateStatus(booking.Id, SD.StatusCheckedIn, booking.VillaNumber);
+            _unitOfWork.Save();
+            return RedirectToAction(nameof(BookingDetails),new {bookingId = booking.Id});
+        }
+
+        [HttpPost]
+        [Authorize(Roles = SD.Role_Admin)]
+        public IActionResult CheckOut(Booking booking)
+        {
+            _unitOfWork.Booking.UpdateStatus(booking.Id, SD.StatusCompleted, booking.VillaNumber);
+            _unitOfWork.Save();
+            return RedirectToAction(nameof(BookingDetails), new { bookingId = booking.Id });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = SD.Role_Admin)]
+        public IActionResult CancelBooking(Booking booking)
+        {
+            _unitOfWork.Booking.UpdateStatus(booking.Id, SD.StatusCanceled, booking.VillaNumber);
+            _unitOfWork.Save();
+            return RedirectToAction(nameof(BookingDetails), new { bookingId = booking.Id });
+        }
+
         private  List<int>  AssignAvailableVillaNumberByVilla(int villaId) {
             List<int> availableVillaNumbers = new();
             var villaNumbers = _unitOfWork.VillaNumber.GetAll(villaNumber=>villaNumber.VillaId == villaId);
@@ -136,12 +220,12 @@ namespace LuxeStays.Web.Controllers
             return availableVillaNumbers;
         }
 
-        [HttpPost]
-        [Authorize(Roles = SD.Role_Admin)]
-        public IActionResult CheckIn(Booking booking)
-        {
+        //[HttpPost]
+        //[Authorize(Roles = SD.Role_Admin)]
+        //public IActionResult CheckIn(Booking booking)
+        //{
 
-        }
+        //}
 
         #region API Calls
         [HttpGet]
