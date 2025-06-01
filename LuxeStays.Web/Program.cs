@@ -8,6 +8,7 @@ using LuxeStays.Domain.Entities;
 using Stripe;
 using DotNetEnv;
 
+
 var builder = WebApplication.CreateBuilder(args);
 Env.Load();
 string stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
@@ -84,5 +85,11 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate(); // Applies any pending migrations
+}
 
 app.Run();
