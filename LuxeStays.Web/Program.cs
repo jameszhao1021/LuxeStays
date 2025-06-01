@@ -14,13 +14,41 @@ string stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY")
 string stripePublishableKey = Environment.GetEnvironmentVariable("STRIPE_PUBLISHABLE_KEY");
 builder.Configuration["Stripe:SecretKey"] = stripeSecretKey;
 builder.Configuration["Stripe:PublishableKey"] = stripePublishableKey;
+
+string? herokuDbUrl = Environment.GetEnvironmentVariable("postgres://ua8it618v4a44p:p45fb6699505b3bfac3925c6aa56b46e7fcdc47c4f525d0689f82cd03c1c3cbdd@c9mq4861d16jlm.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/ddlss5jul0db7o");
+string? connectionString;
+
+if (!string.IsNullOrEmpty(herokuDbUrl))
+{
+    connectionString = herokuDbUrl;
+}
+else
+{
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+}
+
+
 // Add services to the container.
 builder.Services.AddHttpClient();
 builder.Services.AddControllersWithViews();
-builder.Services.AddDbContext<ApplicationDbContext>(option=>
-option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
+
+//builder.Services.AddDbContext<ApplicationDbContext>(option=>
+//option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+//);
+
+if (!string.IsNullOrEmpty(herokuDbUrl))
+{
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(connectionString));
+}
+else
+{
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlServer(connectionString));
+}
+
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 StripeConfiguration.ApiKey = stripeSecretKey;
 var app = builder.Build();
