@@ -51,7 +51,7 @@ builder.Services.AddControllersWithViews();
 //}
 
 
-if (!string.IsNullOrEmpty(herokuDbUrl) && herokuDbUrl.StartsWith("postgres://"))
+if (!string.IsNullOrEmpty(herokuDbUrl) )
 {
     var databaseUri = new Uri(herokuDbUrl);
     var userInfo = databaseUri.UserInfo.Split(':');
@@ -63,13 +63,14 @@ if (!string.IsNullOrEmpty(herokuDbUrl) && herokuDbUrl.StartsWith("postgres://"))
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(connectionString));
 }
-else
-{
-    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+//else
+//{
+//    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(connectionString));
-}
+//    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//        options.UseSqlServer(connectionString));
+//}
+Console.WriteLine(herokuDbUrl);
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
