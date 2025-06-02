@@ -49,20 +49,21 @@ builder.Services.AddControllersWithViews();
 //    builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //        options.UseSqlServer(connectionString));
 //}
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql("postgres://ua8it618v4a44p:p45fb6699505b3bfac3925c6aa56b46e7fcdc47c4f525d0689f82cd03c1c3cbdd@c9mq4861d16jlm.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/ddlss5jul0db7o"));
 
+//if (!string.IsNullOrEmpty(herokuDbUrl) )
+//{
+//    var databaseUri = new Uri(herokuDbUrl);
+//    var userInfo = databaseUri.UserInfo.Split(':');
 
-if (!string.IsNullOrEmpty(herokuDbUrl) )
-{
-    var databaseUri = new Uri(herokuDbUrl);
-    var userInfo = databaseUri.UserInfo.Split(':');
+//    var npgsqlConnectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Username={userInfo[0]};Password={userInfo[1]};Database={databaseUri.AbsolutePath.TrimStart('/')};SSL Mode=Require;Trust Server Certificate=true";
 
-    var npgsqlConnectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Username={userInfo[0]};Password={userInfo[1]};Database={databaseUri.AbsolutePath.TrimStart('/')};SSL Mode=Require;Trust Server Certificate=true";
+//    connectionString = npgsqlConnectionString;
 
-    connectionString = npgsqlConnectionString;
-
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseNpgsql(connectionString));
-}
+//    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//        options.UseNpgsql(connectionString));
+//}
 //else
 //{
 //    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -110,10 +111,10 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate(); // Applies any pending migrations
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//    db.Database.Migrate(); // Applies any pending migrations
+//}
 
 app.Run();
