@@ -23,6 +23,7 @@ var connectionString = "Host=c9mq4861d16jlm.cluster-czrs8kj4isg7.us-east-1.rds.a
 
 
 
+
 //if (!string.IsNullOrEmpty(herokuDbUrl))
 //{
 //    connectionString = herokuDbUrl;
