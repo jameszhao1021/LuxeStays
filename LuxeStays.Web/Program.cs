@@ -111,10 +111,10 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-//    db.Database.Migrate(); // Applies any pending migrations
-//}
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate(); // Applies any pending migrations
+}
 
 app.Run();
