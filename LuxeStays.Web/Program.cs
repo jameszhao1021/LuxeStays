@@ -17,9 +17,10 @@ builder.Configuration["Stripe:SecretKey"] = stripeSecretKey;
 builder.Configuration["Stripe:PublishableKey"] = stripePublishableKey;
 
 //string? herokuDbUrl = Environment.GetEnvironmentVariable("postgres://ua8it618v4a44p:p45fb6699505b3bfac3925c6aa56b46e7fcdc47c4f525d0689f82cd03c1c3cbdd@c9mq4861d16jlm.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/ddlss5jul0db7o");
-string? herokuDbUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+//string? herokuDbUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 
-var connectionString = "Host=c9mq4861d16jlm.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com;Port=5432;Database=ddlss5jul0db7o;Username=ua8it618v4a44p;Password=p45fb6699505b3bfac3925c6aa56b46e7fcdc47c4f525d0689f82cd03c1c3cbdd;SSL Mode=Require;Trust Server Certificate=true";
+var connectionString = "Host=c9mq4861d16jlm.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com;Port=5432;Database=ddlss5jul0db7o;Username=ua8it618v4a44p;Password=p45fb6699505b3bfac3925c6aa56b46e7fcdc47c4f525d0689f82cd03c1c3cbdd;Trust Server Certificate=true";
+
 
 
 //if (!string.IsNullOrEmpty(herokuDbUrl))
@@ -72,7 +73,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //    builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //        options.UseSqlServer(connectionString));
 //}
-Console.WriteLine(herokuDbUrl);
+
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
@@ -112,10 +113,5 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate(); // Applies any pending migrations
-}
 
 app.Run();
