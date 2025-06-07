@@ -24,4 +24,8 @@
     <ProjectReference Include="..\LuxeStays.Application\LuxeStays.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>

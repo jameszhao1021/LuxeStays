@@ -16,8 +16,14 @@ string stripePublishableKey = Environment.GetEnvironmentVariable("STRIPE_PUBLISH
 builder.Configuration["Stripe:SecretKey"] = stripeSecretKey;
 builder.Configuration["Stripe:PublishableKey"] = stripePublishableKey;
 
+//string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+
+
 //string? herokuDbUrl = Environment.GetEnvironmentVariable("postgres://ua8it618v4a44p:p45fb6699505b3bfac3925c6aa56b46e7fcdc47c4f525d0689f82cd03c1c3cbdd@c9mq4861d16jlm.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/ddlss5jul0db7o");
 //string? herokuDbUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+
 
 var connectionString = "Host=c9mq4861d16jlm.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com;Port=5432;Database=ddlss5jul0db7o;Username=ua8it618v4a44p;Password=p45fb6699505b3bfac3925c6aa56b46e7fcdc47c4f525d0689f82cd03c1c3cbdd;Trust Server Certificate=true";
 
@@ -39,42 +45,20 @@ var connectionString = "Host=c9mq4861d16jlm.cluster-czrs8kj4isg7.us-east-1.rds.a
 builder.Services.AddHttpClient();
 builder.Services.AddControllersWithViews();
 
-//builder.Services.AddDbContext<ApplicationDbContext>(option=>
-//option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-//);
 
-//if (!string.IsNullOrEmpty(herokuDbUrl))
-//{
-//    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//        options.UseNpgsql(connectionString));
-//}
-//else
-//{
-//    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//        options.UseSqlServer(connectionString));
-//}
+
+
+//connection to heroku database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(connectionString));
 
-//if (!string.IsNullOrEmpty(herokuDbUrl) )
-//{
-//    var databaseUri = new Uri(herokuDbUrl);
-//    var userInfo = databaseUri.UserInfo.Split(':');
 
-//    var npgsqlConnectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Username={userInfo[0]};Password={userInfo[1]};Database={databaseUri.AbsolutePath.TrimStart('/')};SSL Mode=Require;Trust Server Certificate=true";
-
-//    connectionString = npgsqlConnectionString;
-
-//    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//        options.UseNpgsql(connectionString));
-//}
-//else
-//{
-//    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-//    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//connection to local database
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //        options.UseSqlServer(connectionString));
-//}
+
+
+
 
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
