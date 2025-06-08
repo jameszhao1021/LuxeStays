@@ -33,11 +33,13 @@ namespace LuxeStays.Infrastructure.Repository
                 if(bookingStatus == SD.StatusCheckedIn)
                 {
                     booking.VillaNumber = villaNumber;
-                    booking.ActualCheckInDate = DateTime.Now;
+                    //booking.ActualCheckInDate = DateTime.Now;
+                    booking.ActualCheckInDate = DateTime.UtcNow;
                 }
                 if (bookingStatus == SD.StatusCompleted)
                 {
-                    booking.ActualCheckOutDate = DateTime.Now;
+                    //booking.ActualCheckOutDate = DateTime.Now;
+                    booking.ActualCheckOutDate = DateTime.UtcNow;
                 }
             }
         }
@@ -54,7 +56,9 @@ namespace LuxeStays.Infrastructure.Repository
                 if (!string.IsNullOrEmpty(paymentIntentId))
                 {
                     booking.StripePaymentIntentId = paymentIntentId;
-                    booking.PaymentDate = DateTime.Now;
+                    //booking.PaymentDate = DateTime.Now;
+                    booking.PaymentDate = DateTime.UtcNow;
+
                     booking.IsPaymentSuccessful = true; 
                 }
             }

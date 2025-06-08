@@ -24,7 +24,8 @@ namespace LuxeStays.Web.Controllers
             {
                 VillaList = _unitOfWork.Villa.GetAll(includeProperties: "VillaAmenity"),
                 Nights = 1,
-                CheckInDate = DateOnly.FromDateTime(DateTime.Now)
+                //CheckInDate = DateOnly.FromDateTime(DateTime.Now)
+                CheckInDate = DateOnly.FromDateTime(DateTime.UtcNow)
             };
             return View(homeVM);
         }

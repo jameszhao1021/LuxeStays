@@ -60,7 +60,8 @@ namespace LuxeStays.Web.Controllers
             var villa =  _unitOfWork.Villa.Get(villa => villa.Id == booking.VillaId);
             booking.TotalCost = booking.Nights * villa.Price;
             booking.Status = SD.StatusPending;
-            booking.BookingDate = DateTime.Now;
+            //booking.BookingDate = DateTime.Now;
+            booking.BookingDate = DateTime.UtcNow;
 
             var villaNumberList = _unitOfWork.VillaNumber.GetAll().ToList();
             var bookedVillas = _unitOfWork.Booking.GetAll(booking => booking.Status == SD.StatusApproved || booking.Status == SD.StatusCheckedIn).ToList();
