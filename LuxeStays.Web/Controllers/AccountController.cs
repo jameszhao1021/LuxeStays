@@ -168,7 +168,10 @@ namespace LuxeStays.Web.Controllers
                 UserName = registerVM.Email,
                 PhoneNumber = registerVM.PhoneNumber,
                 NormalizedEmail = registerVM.Email.ToUpper(),
-                CreatedAt = DateTime.Now,
+                //CreatedAt = DateTime.Now,
+
+                //for heroku version
+                CreatedAt = DateTime.UtcNow,
                 EmailConfirmed = true
             };
 
