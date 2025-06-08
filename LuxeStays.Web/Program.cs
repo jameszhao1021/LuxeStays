@@ -66,6 +66,10 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFramework
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 StripeConfiguration.ApiKey = stripeSecretKey;
 var app = builder.Build();
+
+//for heroku version
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 //StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe:SecretKey").Get<string>();
 
 //builder.Services.ConfigureApplicationCookie(option =>
