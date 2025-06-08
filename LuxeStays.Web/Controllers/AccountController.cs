@@ -5,6 +5,7 @@ using LuxeStays.Web.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace LuxeStays.Web.Controllers
@@ -15,17 +16,21 @@ namespace LuxeStays.Web.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(IUnitOfWork unitOfWork,
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            RoleManager<IdentityRole> roleManager
+            RoleManager<IdentityRole> roleManager,
+            ILogger<AccountController> logger
             )
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
+            _logger = logger; // Add this line
+
         }
 
         public IActionResult Login(string returnUrl=null)
@@ -96,8 +101,66 @@ namespace LuxeStays.Web.Controllers
         }
 
         [HttpPost]
-         public async Task<IActionResult> Register(RegisterVM registerVM)
+        // public async Task<IActionResult> Register(RegisterVM registerVM)
+        //{
+        //    ApplicationUser user = new()
+        //    {
+        //        Name = registerVM.Name,
+        //        Email = registerVM.Email,
+        //        UserName = registerVM.Email,
+        //        PhoneNumber = registerVM.PhoneNumber,
+        //        NormalizedEmail = registerVM.Email.ToUpper(),
+        //        CreatedAt = DateTime.Now,
+        //        EmailConfirmed = true
+        //    };
+        //    var result = await _userManager.CreateAsync(user, registerVM.Password);
+
+        //    if (result.Succeeded)
+        //    {
+        //        if (!string.IsNullOrEmpty(registerVM.Role))
+        //        {
+        //            await _userManager.AddToRoleAsync(user, registerVM.Role);
+        //        }
+
+        //        else
+        //        {
+        //            await _userManager.AddToRoleAsync(user, SD.Role_Customer);
+
+        //        }
+
+        //        await _signInManager.SignInAsync(user, isPersistent: false);
+
+
+        //        if (string.IsNullOrEmpty(registerVM.RedirectUrl))
+        //        {
+        //            return RedirectToAction("Index", "Home");
+        //        }
+        //        else
+        //        {
+        //            return LocalRedirect(registerVM.RedirectUrl);
+        //        }
+        //    }
+
+
+        //    foreach (var error in result.Errors)
+        //    {
+        //        ModelState.AddModelError("", error.Description);
+        //    }
+
+
+        //    registerVM.RoleList = _roleManager.Roles.Select(item => new SelectListItem
+        //    {
+        //        Text = item.Name,
+        //        Value = item.Name
+        //    });
+
+
+        //    return View(registerVM);
+        //}
+        public async Task<IActionResult> Register(RegisterVM registerVM)
         {
+            _logger.LogInformation("Starting user registration for email: {Email}", registerVM.Email);
+
             ApplicationUser user = new()
             {
                 Name = registerVM.Name,
@@ -108,47 +171,46 @@ namespace LuxeStays.Web.Controllers
                 CreatedAt = DateTime.Now,
                 EmailConfirmed = true
             };
+
+            _logger.LogDebug("Attempting to create user: {Email}", registerVM.Email);
             var result = await _userManager.CreateAsync(user, registerVM.Password);
 
             if (result.Succeeded)
             {
-                if (!string.IsNullOrEmpty(registerVM.Role))
-                {
-                    await _userManager.AddToRoleAsync(user, registerVM.Role);
-                }
+                _logger.LogInformation("User {Email} created successfully.", registerVM.Email);
 
-                else
-                {
-                    await _userManager.AddToRoleAsync(user, SD.Role_Customer);
+                string role = !string.IsNullOrEmpty(registerVM.Role) ? registerVM.Role : SD.Role_Customer;
+                _logger.LogDebug("Adding user to role: {Role}", role);
 
-                }
+                await _userManager.AddToRoleAsync(user, role);
+                _logger.LogInformation("User {Email} added to role {Role}.", registerVM.Email, role);
 
                 await _signInManager.SignInAsync(user, isPersistent: false);
+                _logger.LogInformation("User {Email} signed in.", registerVM.Email);
 
+                string redirectUrl = string.IsNullOrEmpty(registerVM.RedirectUrl) ?
+                    Url.Action("Index", "Home") : registerVM.RedirectUrl;
 
-                if (string.IsNullOrEmpty(registerVM.RedirectUrl))
-                {
-                    return RedirectToAction("Index", "Home");
-                }
-                else
-                {
-                    return LocalRedirect(registerVM.RedirectUrl);
-                }
+                _logger.LogInformation("Redirecting user to: {RedirectUrl}", redirectUrl);
+                return LocalRedirect(redirectUrl);
             }
-
-
-            foreach (var error in result.Errors)
+            else
             {
-                ModelState.AddModelError("", error.Description);
-            }
+                // 🔹 Fixed: Changed {UserEmail} to {Email} for consistency
+                _logger.LogError("Failed to create user {Email}. Errors: {@Errors}",
+                    registerVM.Email, result.Errors);
 
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+            }
 
             registerVM.RoleList = _roleManager.Roles.Select(item => new SelectListItem
             {
                 Text = item.Name,
                 Value = item.Name
             });
-                
 
             return View(registerVM);
         }
