@@ -25,12 +25,11 @@ namespace LuxeStays.Infrastructure.Data
             base.OnModelCreating(modelBuilder);
 
             //for heroku version
-            modelBuilder.Entity<ApplicationUser>()
-       .Property(u => u.CreatedAt)
-       .HasConversion(
-           v => v, // storing as is
-           v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
-
+            modelBuilder.Entity<ApplicationUser>(
+       eb =>
+       {
+           eb.Property(b => b.CreatedAt).HasColumnType("timestamp(6)");
+       });
 
             modelBuilder.Entity<Villa>().HasData(
 
