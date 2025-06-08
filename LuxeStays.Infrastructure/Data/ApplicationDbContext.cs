@@ -24,6 +24,14 @@ namespace LuxeStays.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            //for heroku version
+            modelBuilder.Entity<ApplicationUser>()
+       .Property(u => u.CreatedAt)
+       .HasConversion(
+           v => v, // storing as is
+           v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+
             modelBuilder.Entity<Villa>().HasData(
 
                  new Villa
