@@ -176,6 +176,7 @@ namespace LuxeStays.Web.Controllers
             };
 
             _logger.LogDebug("Attempting to create user: {Email}", registerVM.Email);
+            
             var result = await _userManager.CreateAsync(user, registerVM.Password);
 
             if (result.Succeeded)
