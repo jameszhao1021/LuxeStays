@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LuxeStays.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class herokuDatabase : Migration
+    public partial class herokudatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -34,7 +34,7 @@ namespace LuxeStays.Infrastructure.Migrations
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -67,8 +67,8 @@ namespace LuxeStays.Infrastructure.Migrations
                     Sqft = table.Column<int>(type: "integer", nullable: false),
                     Occupancy = table.Column<int>(type: "integer", nullable: false),
                     ImageUrl = table.Column<string>(type: "text", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    UpdateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    UpdateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -216,15 +216,15 @@ namespace LuxeStays.Infrastructure.Migrations
                     TotalCost = table.Column<double>(type: "double precision", nullable: false),
                     Nights = table.Column<int>(type: "integer", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: true),
-                    BookingDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    BookingDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     CheckInDate = table.Column<DateOnly>(type: "date", nullable: false),
                     CheckOutDate = table.Column<DateOnly>(type: "date", nullable: false),
                     IsPaymentSuccessful = table.Column<bool>(type: "boolean", nullable: false),
-                    PaymentDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    PaymentDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     StripeSessionId = table.Column<string>(type: "text", nullable: true),
                     StripePaymentIntentId = table.Column<string>(type: "text", nullable: true),
-                    ActualCheckInDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ActualCheckOutDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ActualCheckInDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    ActualCheckOutDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     VillaNumber = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>

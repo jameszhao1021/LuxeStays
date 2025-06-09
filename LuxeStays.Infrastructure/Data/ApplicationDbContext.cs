@@ -25,11 +25,17 @@ namespace LuxeStays.Infrastructure.Data
             base.OnModelCreating(modelBuilder);
 
             //for heroku version
-            modelBuilder.Entity<ApplicationUser>(
-       eb =>
-       {
-           eb.Property(b => b.CreatedAt).HasColumnType("timestamp(6)");
-       });
+            foreach (var property in modelBuilder.Model.GetEntityTypes()
+                 .SelectMany(t => t.GetProperties())
+                 .Where
+                 (p
+                   => p.ClrType == typeof(DateTime)
+                      || p.ClrType == typeof(DateTime?)
+                 )
+        )
+            {
+                property.SetColumnType("timestamp without time zone");
+            }
 
             modelBuilder.Entity<Villa>().HasData(
 
