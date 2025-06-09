@@ -171,7 +171,7 @@ namespace LuxeStays.Web.Controllers
                 //CreatedAt = DateTime.Now,
 
                 //for heroku version
-                CreatedAt = DateTime.UtcNow,
+                //CreatedAt = DateTime.UtcNow,
                 EmailConfirmed = true
             };
 
