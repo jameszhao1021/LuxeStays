@@ -104,5 +104,15 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 
+//auto-migration  2025/7/5
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
+// for heroku version
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 
 app.Run();
