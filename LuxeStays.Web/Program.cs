@@ -94,6 +94,10 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+
+//add UseAuthentication 2025/7/5
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapStaticAssets();
