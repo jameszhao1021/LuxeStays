@@ -2,6 +2,7 @@
 using LuxeStays.Application.Common.Utility;
 using LuxeStays.Domain.Entities;
 using LuxeStays.Infrastructure.Data;
+using LuxeStays.Infrastructure.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,7 @@ namespace LuxeStays.Web.Controllers
         //private readonly IVillaRepository _villaRepo;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IWebHostEnvironment _webHostEnvironment;
-
+        private readonly IS3Service _s3Service;
         //public VillaController(ApplicationDbContext db)
         //{
         //    _db = db;
@@ -29,10 +30,11 @@ namespace LuxeStays.Web.Controllers
         //    _villaRepo = villaRepo;
         //}
 
-        public VillaController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
+        public VillaController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, IS3Service s3Service)
         {
             _unitOfWork = unitOfWork;
             _webHostEnvironment = webHostEnvironment;
+            _s3Service = s3Service;
         }
 
         //public IActionResult Index()
@@ -53,7 +55,7 @@ namespace LuxeStays.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(Villa villa)
+        public async Task<IActionResult> Create(Villa villa)
         {
             if (villa.Name == villa.Description)
             {
@@ -61,16 +63,30 @@ namespace LuxeStays.Web.Controllers
             }
             if (ModelState.IsValid)
             {
-                if(villa.Image != null )
+                if (villa.Image != null)
                 {
-                    string fileName = Guid.NewGuid().ToString()+ Path.GetExtension(villa.Image.FileName);
-                    string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, @"images\VillaImage");
+                    //Store files locally
 
-                    using (var fileStream = new FileStream(Path.Combine(imagePath, fileName), FileMode.Create))
+                    //string fileName = Guid.NewGuid().ToString()+ Path.GetExtension(villa.Image.FileName);
+                    //string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, @"images\VillaImage");
+
+                    //using (var fileStream = new FileStream(Path.Combine(imagePath, fileName), FileMode.Create))
+                    //{
+                    //    villa.Image.CopyTo(fileStream);
+                    //}
+                    //villa.ImageUrl = @"\images\VillaImage\" + fileName;
+
+                    //Use AWS S3
+                    using (var stream = villa.Image.OpenReadStream())
                     {
-                        villa.Image.CopyTo(fileStream);
+                        var fileUrl = await _s3Service.UploadFileAsync(
+                            stream,
+                            villa.Image.FileName,
+                            villa.Image.ContentType
+                        );
+
+                        villa.ImageUrl = fileUrl;
                     }
-                    villa.ImageUrl = @"\images\VillaImage\" + fileName;
                 }
                 else
                 {
@@ -99,42 +115,82 @@ namespace LuxeStays.Web.Controllers
             return View(updateVilla);
         }
 
-        [HttpPost]
-        public IActionResult Update(Villa villa)
-        {
+        //[HttpPost]
+        //public IActionResult Update(Villa villa)
+        //{
 
+        //    if (ModelState.IsValid && villa.Id > 0)
+        //    {
+
+        //        if (villa.Image != null)
+        //        {
+        //            string fileName = Guid.NewGuid().ToString() + Path.GetExtension(villa.Image.FileName);
+        //            string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, @"images\VillaImage");
+
+        //            if (!string.IsNullOrEmpty(villa.ImageUrl))
+        //            {
+        //                var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, villa.ImageUrl.TrimStart('\\'));
+        //                if (System.IO.File.Exists(oldImagePath)) {
+        //                    System.IO.File.Delete(oldImagePath);
+        //                }
+        //            }
+
+
+        //            using (var fileStream = new FileStream(Path.Combine(imagePath, fileName), FileMode.Create))
+        //            {
+        //                villa.Image.CopyTo(fileStream);
+        //            }
+        //            villa.ImageUrl = @"\images\VillaImage\" + fileName;
+        //        }
+
+        //        _unitOfWork.Villa.Update(villa);
+        //        //_db.SaveChanges();
+        //        _unitOfWork.Save();
+        //        TempData["success"] = "The villa has been updated successfully.";
+        //        return RedirectToAction("Index");
+        //    }
+        //    return View();
+        //}
+
+        //Use AWS S3
+        [HttpPost]
+        public async Task<IActionResult> Update(Villa villa)
+        {
             if (ModelState.IsValid && villa.Id > 0)
             {
+                string existingImageUrl = villa.ImageUrl;
 
                 if (villa.Image != null)
                 {
-                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(villa.Image.FileName);
-                    string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, @"images\VillaImage");
-
-                    if (!string.IsNullOrEmpty(villa.ImageUrl))
+           
+                    // Upload the new image to S3
+                    using (var stream = villa.Image.OpenReadStream())
                     {
-                        var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, villa.ImageUrl.TrimStart('\\'));
-                        if (System.IO.File.Exists(oldImagePath)) {
-                            System.IO.File.Delete(oldImagePath);
-                        }
-                    }
+                        string fileUrl = await _s3Service.UploadFileAsync(
+                            stream,
+                            villa.Image.FileName,
+                            villa.Image.ContentType
+                        );
 
-
-                    using (var fileStream = new FileStream(Path.Combine(imagePath, fileName), FileMode.Create))
-                    {
-                        villa.Image.CopyTo(fileStream);
+                        villa.ImageUrl = fileUrl;
                     }
-                    villa.ImageUrl = @"\images\VillaImage\" + fileName;
                 }
-              
+                else
+                {
+                    // No new image uploaded, keep the existing one
+                    villa.ImageUrl = existingImageUrl;
+                }
+
                 _unitOfWork.Villa.Update(villa);
-                //_db.SaveChanges();
                 _unitOfWork.Save();
+
                 TempData["success"] = "The villa has been updated successfully.";
                 return RedirectToAction("Index");
             }
+
             return View();
         }
+
 
         public IActionResult Delete(int villaId) {
             //Villa? deleteVilla = _db.Villas.FirstOrDefault(villa => villa.Id == villaId);
