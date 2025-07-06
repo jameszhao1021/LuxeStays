@@ -35,8 +35,7 @@ namespace LuxeStays.Infrastructure.Repository
                 InputStream = fileStream,
                 Key = uniqueFileName,
                 BucketName = _bucketName,
-                ContentType = contentType,
-                CannedACL = S3CannedACL.PublicRead
+                ContentType = contentType
             };
 
             var fileTransferUtility = new TransferUtility(_s3Client);
