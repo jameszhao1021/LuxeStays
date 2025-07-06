@@ -34,7 +34,7 @@ namespace LuxeStays.Infrastructure.Data
                  )
         )
             {
-                property.SetColumnType("timestamp without time zone");
+                property.SetColumnType("timestamp with time zone");
             }
 
             modelBuilder.Entity<Villa>().HasData(

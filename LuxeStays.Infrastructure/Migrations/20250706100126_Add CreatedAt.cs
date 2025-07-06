@@ -14,7 +14,7 @@ namespace LuxeStays.Infrastructure.Migrations
             migrationBuilder.AddColumn<DateTime>(
                 name: "CreatedAt",
                 table: "AspNetUsers",
-                type: "timestamp without time zone",
+                type: "timestamp with time zone",
                 nullable: false,
                 defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
         }
