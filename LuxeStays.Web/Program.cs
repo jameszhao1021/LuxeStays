@@ -11,6 +11,9 @@ using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 Env.Load();
+
+builder.Services.AddScoped<IS3Service, S3Service>();
+
 string stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
 string stripePublishableKey = Environment.GetEnvironmentVariable("STRIPE_PUBLISHABLE_KEY");
 builder.Configuration["Stripe:SecretKey"] = stripeSecretKey;
