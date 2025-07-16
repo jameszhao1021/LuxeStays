@@ -32,7 +32,7 @@ namespace LuxeStays.Infrastructure.Data
                    => p.ClrType == typeof(DateTime)
                       || p.ClrType == typeof(DateTime?)
                  )
-        )
+            )
             {
                 property.SetColumnType("timestamp with time zone");
             }
