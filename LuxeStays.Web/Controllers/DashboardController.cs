@@ -1,12 +1,16 @@
 ﻿using LuxeStays.Application.Common.Interfaces;
+using LuxeStays.Application.Common.Utility;
+using LuxeStays.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LuxeStays.Web.Controllers
 {
     public class DashboardController : Controller
     {
-
         private readonly IUnitOfWork _unitOfWork;
+        static int previousMonth = DateTime.UtcNow.Month == 1 ? 12 : DateTime.UtcNow.Month - 1;
+        readonly DateTime previousMonthStartDate = new (DateTime.UtcNow.Year, previousMonth, 1);
+        readonly DateTime currentMonthStartDate = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
 
         public DashboardController(IUnitOfWork unitOfWork)
         {
@@ -16,6 +20,33 @@ namespace LuxeStays.Web.Controllers
         {
          
             return View();
+        }
+
+        public async Task<IActionResult> GetTotalBookingRadialChartData()
+        {
+            var totalBookings = _unitOfWork.Booking.GetAll(u => u.Status != SD.StatusPending && u.Status != SD.StatusCanceled);
+
+            var countByCurrentMonth = totalBookings.Count(u => u.BookingDate >= currentMonthStartDate && u.BookingDate <= DateTime.UtcNow);
+
+            var countByPreviousMonth = totalBookings.Count(u => u.BookingDate >= previousMonthStartDate && u.BookingDate <= currentMonthStartDate);
+
+            RadialBarChartVM radialBarChartVM = new();
+
+
+
+            int increaseDecreaseRatio = 100;
+            if (countByPreviousMonth != 0)
+            {
+                increaseDecreaseRatio = Convert.ToInt32((countByCurrentMonth - countByPreviousMonth) / countByPreviousMonth * 100);
+            }
+
+            radialBarChartVM.TotalCount = totalBookings.Count();
+            radialBarChartVM.CountInCurrentMonth = countByCurrentMonth;
+            radialBarChartVM.HasRatioIncrease = countByCurrentMonth > countByPreviousMonth;
+            radialBarChartVM.Series = new int[] { increaseDecreaseRatio };
+
+            return Json(radialBarChartVM);
+
         }
     }
 }
